@@ -139,11 +139,17 @@ public:
 	}
 
 
-	TSharedRef< class SWidget > MakeWidget()
+	TSharedRef< class SDetailWidget > MakeWidget()
 	{
-		TSharedRef<SWidget> DetailWidget = SNew(SDetailWidget, DetailBuilderList);
-		return DetailWidget;
+		return SNew(SDetailWidget, DetailBuilderList);
 	}
+
+	//TSharedRef< class SWidget > MakeWidget()
+	//{
+	//	TSharedRef<SWidget> DetailWidget = SNew(SDetailWidget, DetailBuilderList);
+	//	return DetailWidget;
+	//}
+
 
 	TArray< TSharedRef < const FDetailEntryBlock > > DetailBuilderList;
 };

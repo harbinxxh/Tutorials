@@ -230,14 +230,6 @@ void SDetailWidget::OnCheckStateChangedEvent(ECheckBoxState InNewState)
 
 TSharedRef<SWidget> SDetailWidget::HandleComboBoxGenerateWidget(TSharedPtr<FString> InItem)
 {
-	//return SNew(SBox)
-	//	.Padding(DeviceProfileCreateProfileUIConstants::ListElementPadding)
-	//	[
-	//		SNew(STextBlock)
-	//		.Text(FText::FromString(*InItem))
-	//	];
-
-
 	return SNew(STextBlock).Text( FText::FromString(*InItem) );
 }
 

@@ -79,10 +79,11 @@ void ATutorialsPlayerController::BeginPlay()
 		TEXT("Button1"),
 		EWidgetType::WT_BUTTON,
 		FText::FromString(TEXT("»Ö¸´Ä¬ÈÏÖµ")),
-		FSimpleDelegate::CreateUObject(this, &ATutorialsPlayerController::OnButtonClicked)
+		FSimpleDelegate()
+		//FSimpleDelegate::CreateUObject(this, &ATutorialsPlayerController::OnButtonClicked)
 	);
 
-	TSharedRef<SWidget> DetailWidget = DetailBuilder.MakeWidget();
+	TSharedRef<SDetailWidget> DetailWidget = DetailBuilder.MakeWidget();
 
 
 	TSharedRef<SVerticalBox> VerticalBox = SNew(SVerticalBox)
@@ -93,8 +94,8 @@ void ATutorialsPlayerController::BeginPlay()
 		DetailWidget
 	];
 
-	TSharedRef<SDetailWidget> StaticSDW = StaticCastSharedRef<SDetailWidget>(DetailWidget);
-	TSharedPtr< SWidget > TempAA = StaticSDW->GetEntryBlockSWidget(TEXT("Check1"));
+	//TSharedRef<SDetailWidget> StaticSDW = StaticCastSharedRef<SDetailWidget>(DetailWidget);
+	TSharedPtr< SWidget > TempAA = DetailWidget->GetEntryBlockSWidget(TEXT("Check1"));
 	TempAA->SetEnabled(false);
 
 	GEngine->GameViewport->AddViewportWidgetForPlayer(GetLocalPlayer(), VerticalBox, 1);
