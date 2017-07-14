@@ -5,36 +5,13 @@
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "SDetailWidget.h"
 #include "Runtime/AppFramework/Public/Widgets/Colors/SColorPicker.h"
-
 // tmp test
 #include "TutorialsPlayerController.h"
 
 
 void SDetailWidget::Construct(const FArguments& InArgs, TArray< TSharedRef < const FDetailEntryBlock > >& DetailBuilderList)
 {
-
 	TSharedPtr<SVerticalBox> VerticalBox = nullptr;
-
-	//ChildSlot
-	//[
-	//	SAssignNew(HorizontalBox, SVerticalBox)
-	//];
-
-	// Loop TArray
-	//for (TArray< TSharedRef < const FDetailEntryBlock > >::TIterator It = DetailBuilderList.CreateIterator(); It; ++It)
-	//{
-	//	TSharedRef < const FDetailEntryBlock >& EntryBlock = *It;
-
-	//	TSharedRef<SWidget> Widget = OnEntryBlockAnalyse(EntryBlock);
-
-	//	HorizontalBox->AddSlot()
-	//	[
-	//		Widget
-	//	];
-	//}
-	/////////////////////////////////////////////
-	// ≤‚ ‘–¬∏Ò Ω
-
 
 	ChildSlot
 	.Padding(0.0f, 2.0f, 0.0f, 0.0f)
@@ -64,7 +41,6 @@ void SDetailWidget::Construct(const FArguments& InArgs, TArray< TSharedRef < con
 			]
 		]
 	];
-
 
 	// Loop TArray
 	for (TArray< TSharedRef < const FDetailEntryBlock > >::TIterator It = DetailBuilderList.CreateIterator(); It; ++It)
@@ -111,6 +87,14 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockAnalyse(TSharedRef < const FDetai
 	{
 		Widget = OnEntryBlockTextBlockCombo(EntryBlock);
 	}
+	else if (EntryBlock->Type == EWidgetType::WT_TEXTBLOCK_SPINBOX)
+	{
+		Widget = OnEntryBlockTextBlockSpinBox(EntryBlock);
+	}
+	else if (EntryBlock->Type == EWidgetType::WT_TEXTBLOCK_EDITABLETEXTBOX)
+	{
+		Widget = OnEntryBlockTextBlockEditableTextBox(EntryBlock);
+	}
 
 	return Widget;
 }
@@ -124,9 +108,6 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockButton(TSharedRef < const FDetail
 	+ SHorizontalBox::Slot()
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Center)
-	//.Padding(5.f)
-	//.AutoWidth()
-	//.FillWidth(1.f)
 	[
 		SNew(SButton)
 		.OnClicked(this, &SDetailWidget::OnButtonClickedEvent)
@@ -216,6 +197,74 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockCombo(TSharedRef < const
 	return Widget;
 }
 
+TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockSpinBox(TSharedRef < const FDetailEntryBlock >& EntryBlock)
+{
+	OnSpinBoxValueChanged = EntryBlock->OnSpinBoxValueChanged;
+
+	TSharedRef<SWidget> Widget = SNew(SHorizontalBox)
+	+ SHorizontalBox::Slot()
+	.HAlign(HAlign_Left)
+	.VAlign(VAlign_Center)
+	.Padding(5.f)
+	.AutoWidth()
+	[
+		SNew(STextBlock)
+		.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14))
+		.ColorAndOpacity(FLinearColor(1, 1, 1, 0.5))
+		.Text(EntryBlock->Text)
+	]
+	+ SHorizontalBox::Slot()
+	.Padding(FMargin(5.0f, 0.0f, 0.0f, 0.0f))
+	.HAlign(HAlign_Fill)
+	.VAlign(VAlign_Center)
+	.AutoWidth()
+	[
+		SNew(SSpinBox<float>)
+		.MinValue(0.f)
+		.MaxValue(100.f)
+		.Delta(1.f)
+		.MinDesiredWidth(122.f)
+		.Value(EntryBlock->SpinBoxValue)
+		.OnValueChanged(this, &SDetailWidget::OnSpinBoxValueChangedEvent)
+	];
+
+	SWidgetListMap.Add(EntryBlock->BlockID, Widget);
+	return Widget;
+}
+
+TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockEditableTextBox(TSharedRef < const FDetailEntryBlock >& EntryBlock)
+{
+	OnEditableTextBoxChanged = EntryBlock->OnEditableTextChanged;
+
+	TSharedRef<SWidget> Widget = SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		.Padding(5.f)
+		.AutoWidth()
+		[
+			SNew(STextBlock)
+			.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14))
+			.ColorAndOpacity(FLinearColor(1, 1, 1, 0.5))
+			.Text(EntryBlock->Text)
+		]
+		+ SHorizontalBox::Slot()
+		.Padding(FMargin(5.0f, 0.0f, 0.0f, 0.0f))
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		.AutoWidth()
+		[
+			SNew(SEditableTextBox)
+			.Text(EntryBlock->EditableText)
+			.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12))
+			.OnTextCommitted(this, &SDetailWidget::OnEditableTextBoxChangedEvent)
+			.OnTextChanged(this, &SDetailWidget::OnEditableTextBoxChangedEvent, ETextCommit::Default)
+		];
+
+		SWidgetListMap.Add(EntryBlock->BlockID, Widget);
+		return Widget;
+}
+
 FReply SDetailWidget::OnButtonClickedEvent()
 {
 	OnButtonClicked.ExecuteIfBound();
@@ -244,5 +293,15 @@ void SDetailWidget::HandleSelectorComboBoxSelectionChanged(TSharedPtr<FString> N
 FText SDetailWidget::HandleSelectorComboBoxText() const
 {
 	return SelectorComboBoxSelectedItem.IsValid() ? FText::FromString(*SelectorComboBoxSelectedItem) : FText::GetEmpty();
+}
+
+void SDetailWidget::OnSpinBoxValueChangedEvent(float InValue)
+{
+	OnSpinBoxValueChanged.ExecuteIfBound(InValue);
+}
+
+void SDetailWidget::OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType) const
+{
+	OnEditableTextBoxChanged.ExecuteIfBound(InText);
 }
 

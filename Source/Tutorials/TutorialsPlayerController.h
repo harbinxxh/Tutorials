@@ -38,6 +38,7 @@ public:
 	FLinearColor OnGetLinearColorEvent();
 	void OnLinearColorValueChangedEvent(FLinearColor InLinearColor);
 	void OnComboBoxSelectionChanged(const FString& SelectItemName);
+	void OnEditableTextBoxChanged(const FText& InText);
 
 	float TestSpinBoxValue;
 	ECheckBoxState TestCheckBoxState;

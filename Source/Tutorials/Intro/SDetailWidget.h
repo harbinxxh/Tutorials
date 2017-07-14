@@ -2,7 +2,9 @@
 
 #pragma once
 
+
 DECLARE_DELEGATE_OneParam(FOnComboBoxSelectionChanged, const FString& /*SelectItemName*/);
+DECLARE_DELEGATE_OneParam(FOnEditableTextBoxChanged, const FText&);
 
 class FDetailEntryBlock;
 class FDetailBuilder;
@@ -17,7 +19,9 @@ namespace EWidgetType
 		WT_BUTTON,
 		WT_TEXTBLOCK_BUTTON,
 		WT_TEXTBLOCK_CHECK,
-		WT_TEXTBLOCK_COMBO
+		WT_TEXTBLOCK_COMBO,
+		WT_TEXTBLOCK_SPINBOX,
+		WT_TEXTBLOCK_EDITABLETEXTBOX
 	};
 }
 
@@ -42,6 +46,8 @@ protected:
 	TSharedRef<SWidget> OnEntryBlockButton(TSharedRef < const FDetailEntryBlock >& EntryBlock);
 	TSharedRef<SWidget> OnEntryBlockTextBlockCheck(TSharedRef < const FDetailEntryBlock >& EntryBlock);
 	TSharedRef<SWidget> OnEntryBlockTextBlockCombo(TSharedRef < const FDetailEntryBlock >& EntryBlock);
+	TSharedRef<SWidget> OnEntryBlockTextBlockSpinBox(TSharedRef < const FDetailEntryBlock >& EntryBlock);
+	TSharedRef<SWidget> OnEntryBlockTextBlockEditableTextBox(TSharedRef < const FDetailEntryBlock >& EntryBlock);
 
 	FReply OnButtonClickedEvent();
 	void OnCheckStateChangedEvent(ECheckBoxState InNewState);
@@ -54,6 +60,12 @@ protected:
 
 	// Callback for getting the text of the selector combo box in the SComboBox example.
 	FText HandleSelectorComboBoxText() const;
+
+	// Callback for getting the spin value
+	void OnSpinBoxValueChangedEvent(float InValue);
+
+	/** Delegate to commit workspace text to settings */
+	void OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType) const;
 
 private:
 	FSimpleDelegate OnButtonClicked;
@@ -68,6 +80,12 @@ private:
 	
 	// Holds the selected text in the SComboBox example.
 	TSharedPtr<FString>	SelectorComboBoxSelectedItem;
+
+	// Delegate SpinBox Value Change
+	FOnFloatValueChanged OnSpinBoxValueChanged;
+
+	// Delegate EditableTextBox Text Changed
+	FOnEditableTextBoxChanged OnEditableTextBoxChanged;
 
 	SWidgetMap SWidgetListMap;
 };
@@ -94,10 +112,27 @@ public:
 	// Combo Item List
 	TArray< TSharedPtr< FString > > RoomComboList;
 
+	// Initial SpinBox Value
+	float SpinBoxValue;
+
+	// Initial EditableTextBox Text
+	FText EditableText;
+
 	/** Delegate Callback*/
+	// Delegate CheckBox
 	FOnCheckStateChanged OnCheckStateChanged;
+
+	// Delegate Button
 	FSimpleDelegate OnButtonClicked;
+
+	// Delegate ComboBox
 	FOnComboBoxSelectionChanged OnComboBoxSelectionChanged;
+
+	// Delegate SpinBox Value Change
+	FOnFloatValueChanged OnSpinBoxValueChanged;
+
+	// Delegate EditableTextBox Text Changed
+	FOnEditableTextBoxChanged OnEditableTextChanged;
 };
 
 
@@ -105,7 +140,7 @@ class FDetailBuilder
 {
 public:
 	// Button
-	void AddEntryBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const FSimpleDelegate& InOnButtonClicked)
+	void AddButtonBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const FSimpleDelegate& InOnButtonClicked = FSimpleDelegate())
 	{
 		TSharedRef< FDetailEntryBlock > EntryBlock(new FDetailEntryBlock());
 		EntryBlock->BlockID = InBlockID;
@@ -116,7 +151,7 @@ public:
 	}
 
 	// Check
-	void AddEntryBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const FOnCheckStateChanged& InOnCheckStateChanged)
+	void AddCheckBoxBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const FOnCheckStateChanged& InOnCheckStateChanged = FOnCheckStateChanged())
 	{
 		TSharedRef< FDetailEntryBlock > EntryBlock(new FDetailEntryBlock());
 		EntryBlock->BlockID = InBlockID;
@@ -127,7 +162,7 @@ public:
 	}
 
 	// Combo
-	void AddEntryBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const TArray< TSharedPtr< FString > >& InRoomComboList, const FOnComboBoxSelectionChanged& InOnComboBoxSelectionChanged)
+	void AddComboBoxBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const TArray< TSharedPtr< FString > >& InRoomComboList, const FOnComboBoxSelectionChanged& InOnComboBoxSelectionChanged = FOnComboBoxSelectionChanged())
 	{
 		TSharedRef< FDetailEntryBlock > EntryBlock(new FDetailEntryBlock());
 		EntryBlock->BlockID = InBlockID;
@@ -138,18 +173,36 @@ public:
 		DetailBuilderList.Add(EntryBlock);
 	}
 
+	// SpinBox
+	void AddSpinBoxBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const float InSpinBoxValue, const FOnFloatValueChanged& InOnSpinBoxValueChanged = FOnFloatValueChanged())
+	{
+		TSharedRef< FDetailEntryBlock > EntryBlock(new FDetailEntryBlock());
+		EntryBlock->BlockID = InBlockID;
+		EntryBlock->Type = InType;
+		EntryBlock->Text = InText;
+		EntryBlock->SpinBoxValue = InSpinBoxValue;
+		EntryBlock->OnSpinBoxValueChanged = InOnSpinBoxValueChanged;
+
+		DetailBuilderList.Add(EntryBlock);
+	}
+
+	// SEditableTextBox
+	void AddEditableTextBoxBlock(const FString& InBlockID, EWidgetType::Type InType, const FText& InText, const FText& InEditableText, const FOnEditableTextBoxChanged& InOnEditableTextBoxChanged = FOnEditableTextBoxChanged())
+	{
+		TSharedRef< FDetailEntryBlock > EntryBlock(new FDetailEntryBlock());
+		EntryBlock->BlockID = InBlockID;
+		EntryBlock->Type = InType;
+		EntryBlock->Text = InText;
+		EntryBlock->EditableText = InEditableText;
+		EntryBlock->OnEditableTextChanged = InOnEditableTextBoxChanged;
+
+		DetailBuilderList.Add(EntryBlock);
+	}
 
 	TSharedRef< class SDetailWidget > MakeWidget()
 	{
 		return SNew(SDetailWidget, DetailBuilderList);
 	}
-
-	//TSharedRef< class SWidget > MakeWidget()
-	//{
-	//	TSharedRef<SWidget> DetailWidget = SNew(SDetailWidget, DetailBuilderList);
-	//	return DetailWidget;
-	//}
-
 
 	TArray< TSharedRef < const FDetailEntryBlock > > DetailBuilderList;
 };

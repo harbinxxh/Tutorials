@@ -37,21 +37,21 @@ void ATutorialsPlayerController::BeginPlay()
 	// 测试 SDetailWidget 控件
 
 	FDetailBuilder DetailBuilder;
-	DetailBuilder.AddEntryBlock(
+	DetailBuilder.AddCheckBoxBlock(
 		TEXT("Check1"),
 		EWidgetType::WT_TEXTBLOCK_CHECK,
 		FText::FromString(TEXT("开启空间名")),
 		FOnCheckStateChanged::CreateUObject(this, &ATutorialsPlayerController::OnCheckStateChangedEvent)
 	);
 
-	DetailBuilder.AddEntryBlock(
+	DetailBuilder.AddCheckBoxBlock(
 		TEXT("Check2"),
 		EWidgetType::WT_TEXTBLOCK_CHECK,
 		FText::FromString(TEXT("生成踢脚线")),
 		FOnCheckStateChanged::CreateUObject(this, &ATutorialsPlayerController::OnCheckStateChangedEvent)
 	);
 
-	DetailBuilder.AddEntryBlock(
+	DetailBuilder.AddCheckBoxBlock(
 		TEXT("Check3"),
 		EWidgetType::WT_TEXTBLOCK_CHECK,
 		FText::FromString(TEXT("生成顶角线")),
@@ -66,7 +66,7 @@ void ATutorialsPlayerController::BeginPlay()
 	RoomComboList.Add(MakeShareable(new FString(TEXT("书房"))));
 	RoomComboList.Add(MakeShareable(new FString(TEXT("客厅"))));
 
-	DetailBuilder.AddEntryBlock(
+	DetailBuilder.AddComboBoxBlock(
 		TEXT("Combo1"),
 		EWidgetType::WT_TEXTBLOCK_COMBO,
 		FText::FromString(TEXT("基础空间名")),
@@ -75,7 +75,7 @@ void ATutorialsPlayerController::BeginPlay()
 	);
 
 	// Button
-	DetailBuilder.AddEntryBlock(
+	DetailBuilder.AddButtonBlock(
 		TEXT("Button1"),
 		EWidgetType::WT_BUTTON,
 		FText::FromString(TEXT("恢复默认值")),
@@ -83,8 +83,25 @@ void ATutorialsPlayerController::BeginPlay()
 		//FSimpleDelegate::CreateUObject(this, &ATutorialsPlayerController::OnButtonClicked)
 	);
 
-	TSharedRef<SDetailWidget> DetailWidget = DetailBuilder.MakeWidget();
+	// SpinBox
+	DetailBuilder.AddSpinBoxBlock(
+		TEXT("SpinBox"),
+		EWidgetType::WT_TEXTBLOCK_SPINBOX,
+		FText::FromString(TEXT("请输入数值")),
+		22.f, // 初始默认值
+		FOnFloatValueChanged::CreateUObject(this, &ATutorialsPlayerController::OnSpinBoxValueChangedEvent)
+	);
 
+	// SEditableTextBox
+	DetailBuilder.AddEditableTextBoxBlock(
+		TEXT("EditableTextBox"),
+		EWidgetType::WT_TEXTBLOCK_EDITABLETEXTBOX,
+		FText::FromString(TEXT("请输入内容")),
+		FText::FromString(TEXT("测试数据")),
+		FOnEditableTextBoxChanged::CreateUObject(this, &ATutorialsPlayerController::OnEditableTextBoxChanged)
+	);
+
+	TSharedRef<SDetailWidget> DetailWidget = DetailBuilder.MakeWidget();
 
 	TSharedRef<SVerticalBox> VerticalBox = SNew(SVerticalBox)
 	+ SVerticalBox::Slot()
@@ -394,7 +411,7 @@ FReply ATutorialsPlayerController::SetBorderPulsePosition()
 void ATutorialsPlayerController::OnSpinBoxValueChangedEvent(float InValue)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ATutorialsPlayerController::HandleOnValueChanged : %f"), InValue);
-	TestSpinBoxValue = InValue;
+	//TestSpinBoxValue = InValue;
 }
 
 void ATutorialsPlayerController::OnCheckStateChangedEvent(ECheckBoxState InNewState)
@@ -435,6 +452,11 @@ void ATutorialsPlayerController::OnLinearColorValueChangedEvent(FLinearColor InL
 void ATutorialsPlayerController::OnComboBoxSelectionChanged(const FString& SelectItemName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SelectItemName : %s"), *SelectItemName);
+}
+
+void ATutorialsPlayerController::OnEditableTextBoxChanged(const FText& InText)
+{
+	UE_LOG(LogTemp, Warning, TEXT("EditableTextBox : %s"), *(InText.ToString()));
 }
 
 //TSharedRef<SWidget> ATutorialsPlayerController::MakeDetailWidget()
