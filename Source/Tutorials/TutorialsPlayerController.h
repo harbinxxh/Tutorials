@@ -29,4 +29,26 @@ public:
 
 	/** Reference to the canvas we use to position our content widgets */
 	TSharedPtr<SCanvas> OverlayCanvas;
+
+	// SCustomWidget Delegate Function
+	void OnSpinBoxValueChangedEvent(float InValue);
+	void OnCheckStateChangedEvent( ECheckBoxState InNewState);
+	float OnGetSpinBoxValueEvent();
+	ECheckBoxState OnGetCheckBoxStateEvent();
+	FLinearColor OnGetLinearColorEvent();
+	void OnLinearColorValueChangedEvent(FLinearColor InLinearColor);
+	void OnComboBoxSelectionChanged(const FString& SelectItemName);
+
+	float TestSpinBoxValue;
+	ECheckBoxState TestCheckBoxState;
+	FLinearColor TestColor;
+
+
+	/////////////////
+
+	//TSharedRef<SWidget> MakeDetailWidget();
+
+	void OnButtonClicked();
+
+
 };

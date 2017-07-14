@@ -62,7 +62,6 @@ void UVRSTutorialWindow::Init()
 
 	SAssignNew(TutorialWindow, SWindow)
 		.Title(FText::FromString(TEXT("Totorial")))
-		//.SizingRule(ESizingRule::Autosized)
 		.ClientSize(FVector2D(1280, 800))
 		.AutoCenter(EAutoCenter::PreferredWorkArea)
 		.SupportsMinimize(false)
@@ -85,7 +84,7 @@ void UVRSTutorialWindow::Init()
 			]
 		];
 
-	FSlateApplication::Get().AddWindow(TutorialWindow.ToSharedRef());
+	//FSlateApplication::Get().AddWindow(TutorialWindow.ToSharedRef());
 
 	ShowTutorial(false);
 	ShowBorderPulse(false);

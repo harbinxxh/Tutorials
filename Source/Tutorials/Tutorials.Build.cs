@@ -18,7 +18,8 @@ public class Tutorials : ModuleRules
                 "RHI",
                 "Slate",
                 "SlateCore",
-                "RHI"
+                "RHI",
+                "AppFramework"
             });
 
         PublicIncludePaths.AddRange(
