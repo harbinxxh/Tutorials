@@ -9,10 +9,11 @@
 #include "TutorialsPlayerController.h"
 
 
-void SDetailWidget::Construct(const FArguments& InArgs, TArray< TSharedRef < const FDetailEntryBlock > >& DetailBuilderList)
+void SDetailWidget::Construct(const FArguments& InArgs, TArray< TSharedRef < const FDetailEntryBlock > >& InDetailBuilderList)
 {
-	TSharedPtr<SVerticalBox> VerticalBox = nullptr;
+	DetailBuilderList = InDetailBuilderList;
 
+	TSharedPtr<SVerticalBox> VerticalBox = nullptr;
 	ChildSlot
 	.Padding(0.0f, 2.0f, 0.0f, 0.0f)
 	[
@@ -43,7 +44,7 @@ void SDetailWidget::Construct(const FArguments& InArgs, TArray< TSharedRef < con
 	];
 
 	// Loop TArray
-	for (TArray< TSharedRef < const FDetailEntryBlock > >::TIterator It = DetailBuilderList.CreateIterator(); It; ++It)
+	for (TArray< TSharedRef < const FDetailEntryBlock > >::TIterator It = InDetailBuilderList.CreateIterator(); It; ++It)
 	{
 		TSharedRef < const FDetailEntryBlock >& EntryBlock = *It;
 
@@ -110,7 +111,7 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockButton(TSharedRef < const FDetail
 	.VAlign(VAlign_Center)
 	[
 		SNew(SButton)
-		.OnClicked(this, &SDetailWidget::OnButtonClickedEvent)
+		.OnClicked(this, &SDetailWidget::OnButtonClickedEvent, EntryBlock->BlockID)
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Center)
 		.Content()
@@ -151,7 +152,7 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockCheck(TSharedRef < const
 	.AutoWidth()
 	[
 		SNew(SCheckBox)
-		.OnCheckStateChanged(this, &SDetailWidget::OnCheckStateChangedEvent)
+		.OnCheckStateChanged(this, &SDetailWidget::OnCheckStateChangedEvent, EntryBlock->BlockID)
 	];
 
 	SWidgetListMap.Add(EntryBlock->BlockID, Widget);
@@ -184,8 +185,8 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockCombo(TSharedRef < const
 	[
 		SNew(SComboBox< TSharedPtr<FString> >)
 		.OptionsSource(&RoomComboList)
-		.OnSelectionChanged(this, &SDetailWidget::HandleSelectorComboBoxSelectionChanged)
-		.OnGenerateWidget(this, &SDetailWidget::HandleComboBoxGenerateWidget)
+		.OnSelectionChanged(this, &SDetailWidget::HandleSelectorComboBoxSelectionChanged, EntryBlock->BlockID)
+		.OnGenerateWidget(this, &SDetailWidget::HandleComboBoxGenerateWidget, EntryBlock->BlockID)
 		.Content()
 		[
 			SNew(STextBlock)
@@ -225,7 +226,7 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockSpinBox(TSharedRef < con
 		.Delta(1.f)
 		.MinDesiredWidth(122.f)
 		.Value(EntryBlock->SpinBoxValue)
-		.OnValueChanged(this, &SDetailWidget::OnSpinBoxValueChangedEvent)
+		.OnValueChanged(this, &SDetailWidget::OnSpinBoxValueChangedEvent, EntryBlock->BlockID)
 	];
 
 	SWidgetListMap.Add(EntryBlock->BlockID, Widget);
@@ -257,36 +258,53 @@ TSharedRef<SWidget> SDetailWidget::OnEntryBlockTextBlockEditableTextBox(TSharedR
 			SNew(SEditableTextBox)
 			.Text(EntryBlock->EditableText)
 			.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12))
-			.OnTextCommitted(this, &SDetailWidget::OnEditableTextBoxChangedEvent)
-			.OnTextChanged(this, &SDetailWidget::OnEditableTextBoxChangedEvent, ETextCommit::Default)
+			.OnTextCommitted(this, &SDetailWidget::OnEditableTextBoxChangedEvent, EntryBlock->BlockID)
+			.OnTextChanged(this, &SDetailWidget::OnEditableTextBoxChangedEvent, ETextCommit::Default, EntryBlock->BlockID)
 		];
 
 		SWidgetListMap.Add(EntryBlock->BlockID, Widget);
 		return Widget;
 }
 
-FReply SDetailWidget::OnButtonClickedEvent()
+FReply SDetailWidget::OnButtonClickedEvent(FString BlockID)
 {
-	OnButtonClicked.ExecuteIfBound();
+	TSharedRef<const FDetailEntryBlock >& EntryBlock = OnFindEntryBlock(BlockID);
+	if (!EntryBlock->BlockID.IsEmpty())
+	{
+		EntryBlock->OnButtonClicked.ExecuteIfBound();
+	}
+	//OnButtonClicked.ExecuteIfBound();
 	return FReply::Handled();
 }
 
 
-void SDetailWidget::OnCheckStateChangedEvent(ECheckBoxState InNewState)
+void SDetailWidget::OnCheckStateChangedEvent(ECheckBoxState InNewState, FString BlockID)
 {
-	OnCheckStateChanged.ExecuteIfBound(InNewState);
+	UE_LOG(LogTemp, Warning, TEXT("OnCheckStateChangedEvent : %s"), *BlockID);
+
+	TSharedRef<const FDetailEntryBlock >& EntryBlock = OnFindEntryBlock(BlockID);
+	if (!EntryBlock->BlockID.IsEmpty())
+	{
+		EntryBlock->OnCheckStateChanged.ExecuteIfBound(InNewState);
+	}
+	//OnCheckStateChanged.ExecuteIfBound(InNewState);
 }
 
-TSharedRef<SWidget> SDetailWidget::HandleComboBoxGenerateWidget(TSharedPtr<FString> InItem)
+TSharedRef<SWidget> SDetailWidget::HandleComboBoxGenerateWidget(TSharedPtr<FString> InItem, FString BlockID)
 {
 	return SNew(STextBlock).Text( FText::FromString(*InItem) );
 }
 
-void SDetailWidget::HandleSelectorComboBoxSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+void SDetailWidget::HandleSelectorComboBoxSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo, FString BlockID)
 {
 	FString Selection = *NewSelection;
 
-	OnComboBoxSelectionChanged.ExecuteIfBound(Selection);
+	TSharedRef<const FDetailEntryBlock >& EntryBlock = OnFindEntryBlock(BlockID);
+	if (!EntryBlock->BlockID.IsEmpty())
+	{
+		EntryBlock->OnComboBoxSelectionChanged.ExecuteIfBound(Selection);
+	}
+	//OnComboBoxSelectionChanged.ExecuteIfBound(Selection);
 	SelectorComboBoxSelectedItem = NewSelection;
 }
 
@@ -295,13 +313,40 @@ FText SDetailWidget::HandleSelectorComboBoxText() const
 	return SelectorComboBoxSelectedItem.IsValid() ? FText::FromString(*SelectorComboBoxSelectedItem) : FText::GetEmpty();
 }
 
-void SDetailWidget::OnSpinBoxValueChangedEvent(float InValue)
+void SDetailWidget::OnSpinBoxValueChangedEvent(float InValue, FString BlockID)
 {
-	OnSpinBoxValueChanged.ExecuteIfBound(InValue);
+	TSharedRef<const FDetailEntryBlock >& EntryBlock = OnFindEntryBlock(BlockID);
+	if (!EntryBlock->BlockID.IsEmpty())
+	{
+		EntryBlock->OnSpinBoxValueChanged.ExecuteIfBound(InValue);
+	}
+	//OnSpinBoxValueChanged.ExecuteIfBound(InValue);
 }
 
-void SDetailWidget::OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType) const
+void SDetailWidget::OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType, FString BlockID)
 {
-	OnEditableTextBoxChanged.ExecuteIfBound(InText);
+	TSharedRef<const FDetailEntryBlock >& EntryBlock = OnFindEntryBlock(BlockID);
+	if (!EntryBlock->BlockID.IsEmpty())
+	{
+		EntryBlock->OnEditableTextChanged.ExecuteIfBound(InText);
+	}
+	//OnEditableTextBoxChanged.ExecuteIfBound(InText);
+}
+
+
+TSharedRef<const FDetailEntryBlock >& SDetailWidget::OnFindEntryBlock(FString& InBlockID)
+{
+	// Loop TArray
+	for (TArray< TSharedRef < const FDetailEntryBlock > >::TIterator It = DetailBuilderList.CreateIterator(); It; ++It)
+	{
+		TSharedRef < const FDetailEntryBlock >& EntryBlock = *It;
+
+		if (EntryBlock->BlockID == InBlockID)
+		{
+			return EntryBlock;
+		}
+	}
+	static TSharedRef<const FDetailEntryBlock > EntryBlockTemp(new FDetailEntryBlock());
+	return EntryBlockTemp;
 }
 

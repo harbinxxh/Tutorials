@@ -36,7 +36,7 @@ public:
 	
 	SLATE_END_ARGS()
 
-	void Construct(const FArguments& InArgs, TArray< TSharedRef < const FDetailEntryBlock > >& DetailBuilderList);
+	void Construct(const FArguments& InArgs, TArray< TSharedRef < const FDetailEntryBlock > >& InDetailBuilderList);
 
 	TSharedPtr< SWidget >& GetEntryBlockSWidget(const FString InEntryBlockID);
 
@@ -49,23 +49,25 @@ protected:
 	TSharedRef<SWidget> OnEntryBlockTextBlockSpinBox(TSharedRef < const FDetailEntryBlock >& EntryBlock);
 	TSharedRef<SWidget> OnEntryBlockTextBlockEditableTextBox(TSharedRef < const FDetailEntryBlock >& EntryBlock);
 
-	FReply OnButtonClickedEvent();
-	void OnCheckStateChangedEvent(ECheckBoxState InNewState);
+	FReply OnButtonClickedEvent(FString BlockID);
+	void OnCheckStateChangedEvent(ECheckBoxState InNewState, FString BlockID);
 
 	/** Label utility. */
-	TSharedRef<SWidget> HandleComboBoxGenerateWidget(TSharedPtr<FString> InItem);
+	TSharedRef<SWidget> HandleComboBoxGenerateWidget(TSharedPtr<FString> InItem, FString BlockID);
 
 	// Callback for changing the selector combo box's selection in SComboBox example.
-	void HandleSelectorComboBoxSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+	void HandleSelectorComboBoxSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo, FString BlockID);
 
 	// Callback for getting the text of the selector combo box in the SComboBox example.
 	FText HandleSelectorComboBoxText() const;
 
 	// Callback for getting the spin value
-	void OnSpinBoxValueChangedEvent(float InValue);
+	void OnSpinBoxValueChangedEvent(float InValue, FString BlockID);
 
 	/** Delegate to commit workspace text to settings */
-	void OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType) const;
+	void OnEditableTextBoxChangedEvent(const FText& InText, ETextCommit::Type InCommitType, FString BlockID);
+
+	TSharedRef<const FDetailEntryBlock >& OnFindEntryBlock(FString& InBlockID);
 
 private:
 	FSimpleDelegate OnButtonClicked;
@@ -88,6 +90,8 @@ private:
 	FOnEditableTextBoxChanged OnEditableTextBoxChanged;
 
 	SWidgetMap SWidgetListMap;
+
+	TArray< TSharedRef < const FDetailEntryBlock > > DetailBuilderList;
 };
 
 
